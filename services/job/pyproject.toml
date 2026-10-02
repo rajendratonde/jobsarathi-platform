@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "js-job-service"
+version = "0.1.0"
+description = "JobSarathi Job service"
+requires-python = ">=3.12"
+# Installed with --no-deps after the shared libs (see Dockerfile / docs/local-development.md).
+dependencies = ["js-core", "js-audit", "js-outbox", "js-integration"]
+
+[tool.setuptools.packages.find]
+include = ["job_service*"]

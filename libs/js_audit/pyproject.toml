@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "js-audit"
+version = "0.1.0"
+description = "JobSarathi audit_logs table definition (v5) and recorder"
+requires-python = ">=3.12"
+dependencies = ["js-core"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

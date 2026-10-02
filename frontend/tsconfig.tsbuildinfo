@@ -1,0 +1,1 @@
+{"root":["./src/main.tsx","./src/test-setup.ts","./src/api/client.test.ts","./src/api/client.ts","./src/api/errors.ts","./src/app/app.tsx","./src/config/env.ts","./src/features/system-status/systemstatuspage.test.tsx","./src/features/system-status/systemstatuspage.tsx","./src/shared/notfoundpage.tsx","./vite.config.ts"],"version":"5.6.3"}

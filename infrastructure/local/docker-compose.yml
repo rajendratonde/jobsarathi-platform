@@ -1,0 +1,99 @@
+# Local development stack: PostgreSQL with the 8 service databases + the 8 services.
+# No AWS resource is needed. Usage (from the repo root):
+#   cp .env.example .env            # then set LOCAL_DB_PASSWORD
+#   docker compose -f infrastructure/local/docker-compose.yml --env-file .env up -d --build
+# No API Gateway runs here: the gateway product is decision T2. Each service is
+# reachable on its own localhost port for development.
+name: jobsarathi-platform
+
+x-service: &service
+  build: &build
+    context: ../..
+    dockerfile: infrastructure/docker/service.Dockerfile
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+  environment: &service-env
+    APP_ENV: local
+    LOG_FORMAT: json
+    LOG_LEVEL: INFO
+    MIDDLEWARE_ENABLED: "false"
+    RUN_MIGRATIONS_ON_START: "true"
+    CORS_ORIGINS: '["http://localhost:5173"]'
+    DB_HOST: postgres
+    DB_PORT: "5432"
+    DB_SSLMODE: disable
+    DB_PASSWORD: ${LOCAL_DB_PASSWORD:?set LOCAL_DB_PASSWORD in .env}
+    DB_MIGRATION_PASSWORD: ${LOCAL_DB_PASSWORD}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: jobsarathi-platform-pg
+    environment:
+      POSTGRES_USER: jobsarathi_admin
+      POSTGRES_PASSWORD: ${PG_ADMIN_PASSWORD:?set PG_ADMIN_PASSWORD in .env}
+      POSTGRES_DB: postgres
+      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD}
+    ports:
+      - "127.0.0.1:${PG_PORT:-5434}:5432"   # bound to localhost only
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobsarathi_admin -d reference_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  identity:
+    <<: *service
+    build: { <<: *build, args: { SERVICE: identity, PACKAGE: identity_service } }
+    environment: { <<: *service-env, SERVICE_NAME: identity, DB_NAME: identity_db, DB_USER: identity_service_role, DB_MIGRATION_USER: identity_migration_role }
+    ports: ["127.0.0.1:8001:8000"]
+
+  candidate:
+    <<: *service
+    build: { <<: *build, args: { SERVICE: candidate, PACKAGE: candidate_service } }
+    environment: { <<: *service-env, SERVICE_NAME: candidate, DB_NAME: candidate_db, DB_USER: candidate_service_role, DB_MIGRATION_USER: candidate_migration_role }
+    ports: ["127.0.0.1:8002:8000"]
+
+  employer:
+    <<: *service
+    build: { <<: *build, args: { SERVICE: employer, PACKAGE: employer_service } }
+    environment: { <<: *service-env, SERVICE_NAME: employer, DB_NAME: employer_db, DB_USER: employer_service_role, DB_MIGRATION_USER: employer_migration_role }
+    ports: ["127.0.0.1:8003:8000"]
+
+  job:
+    <<: *service
+    build: { <<: *build, args: { SERVICE: job, PACKAGE: job_service } }
+    environment: { <<: *service-env, SERVICE_NAME: job, DB_NAME: job_db, DB_USER: job_service_role, DB_MIGRATION_USER: job_migration_role }
+    ports: ["127.0.0.1:8004:8000"]
+
+  application:
+    <<: *service
+    build: { <<: *build, args: { SERVICE: application, PACKAGE: application_service } }
+    environment: { <<: *service-env, SERVICE_NAME: application, DB_NAME: application_db, DB_USER: application_service_role, DB_MIGRATION_USER: application_migration_role }
+    ports: ["127.0.0.1:8005:8000"]
+
+  learning:
+    <<: *service
+    build: { <<: *build, args: { SERVICE: learning, PACKAGE: learning_service } }
+    environment: { <<: *service-env, SERVICE_NAME: learning, DB_NAME: learning_db, DB_USER: learning_service_role, DB_MIGRATION_USER: learning_migration_role }
+    ports: ["127.0.0.1:8006:8000"]
+
+  engagement:
+    <<: *service
+    build: { <<: *build, args: { SERVICE: engagement, PACKAGE: engagement_service } }
+    environment: { <<: *service-env, SERVICE_NAME: engagement, DB_NAME: engagement_db, DB_USER: engagement_service_role, DB_MIGRATION_USER: engagement_migration_role }
+    ports: ["127.0.0.1:8007:8000"]
+
+  reference:
+    <<: *service
+    build: { <<: *build, args: { SERVICE: reference, PACKAGE: reference_service } }
+    environment: { <<: *service-env, SERVICE_NAME: reference, DB_NAME: reference_db, DB_USER: reference_service_role, DB_MIGRATION_USER: reference_migration_role }
+    ports: ["127.0.0.1:8008:8000"]
+
+volumes:
+  pgdata:

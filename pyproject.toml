@@ -1,0 +1,19 @@
+[tool.pytest.ini_options]
+addopts = "-q --import-mode=importlib"
+filterwarnings = ["error::DeprecationWarning:js_core.*", "ignore:Using `httpx` with `starlette.testclient`"]
+
+[tool.ruff]
+line-length = 130
+target-version = "py312"
+extend-exclude = ["frontend", "**/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "N"]
+ignore = ["S101", "S608", "B008", "N805", "N818", "UP046", "UP040"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["js_core", "js_audit", "js_outbox", "js_integration", "identity_service", "candidate_service", "employer_service", "job_service", "application_service", "learning_service", "engagement_service", "reference_service"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S", "N"]
+"tools/**" = ["S"]

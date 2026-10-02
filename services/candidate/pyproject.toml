@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "js-candidate-service"
+version = "0.1.0"
+description = "JobSarathi Candidate & Resume service"
+requires-python = ">=3.12"
+# Installed with --no-deps after the shared libs (see Dockerfile / docs/local-development.md).
+dependencies = ["js-core", "js-audit", "js-outbox", "js-integration"]
+
+[tool.setuptools.packages.find]
+include = ["candidate_service*"]
