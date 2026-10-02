@@ -50,7 +50,18 @@ services:
   identity:
     <<: *service
     build: { <<: *build, args: { SERVICE: identity, PACKAGE: identity_service } }
-    environment: { <<: *service-env, SERVICE_NAME: identity, DB_NAME: identity_db, DB_USER: identity_service_role, DB_MIGRATION_USER: identity_migration_role }
+    environment:
+      <<: *service-env
+      SERVICE_NAME: identity
+      DB_NAME: identity_db
+      DB_USER: identity_service_role
+      DB_MIGRATION_USER: identity_migration_role
+      # Local only: OTP codes via the dev sink, cookies over plain http, ephemeral signing/OTP keys.
+      OTP_DEV_SINK: "true"
+      REFRESH_COOKIE_SECURE: "false"
+      DEFAULT_SIGNUP_ROLE_CODE: CANDIDATE
+      BOOTSTRAP_ADMIN_PASSWORD_REF: env:LOCAL_ADMIN_PASSWORD
+      LOCAL_ADMIN_PASSWORD: ${LOCAL_ADMIN_PASSWORD:-}
     ports: ["127.0.0.1:8001:8000"]
 
   candidate:

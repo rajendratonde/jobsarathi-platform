@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "js-approval"
+version = "0.1.0"
+description = "JobSarathi reusable Maker-Checker: the v5 approval tables and the four-eyes rules"
+requires-python = ">=3.12"
+dependencies = ["js-core", "js-auth"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

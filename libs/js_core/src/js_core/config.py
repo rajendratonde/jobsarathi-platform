@@ -36,7 +36,7 @@ class Environment(StrEnum):
 class DatabaseSettings(BaseSettings):
     """One service's own database. The runtime role can only reach this database."""
 
-    model_config = SettingsConfigDict(env_prefix="DB_", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="DB_", extra="ignore", hide_input_in_errors=True)
 
     host: str = "localhost"
     port: int = 5432
@@ -70,7 +70,8 @@ class DatabaseSettings(BaseSettings):
 class ServiceSettings(BaseSettings):
     """Base settings every service extends."""
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore",
+                                      hide_input_in_errors=True)  # never echo secrets in config errors
 
     service_name: str
     app_env: Environment = Environment.LOCAL

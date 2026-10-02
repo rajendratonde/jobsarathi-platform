@@ -6,8 +6,9 @@ import logging
 from pathlib import Path
 
 from identity_service import VERSION
-from identity_service.api import router
+from identity_service.api import build_router, well_known
 from identity_service.config import get_db_settings, get_settings
+from identity_service.runtime import build_runtime
 from js_core.app import create_app
 from js_core.db import Database
 from js_core.migrations import head_revision
@@ -29,11 +30,14 @@ def _migrate_on_start() -> None:
 def build_app():
     settings = get_settings()
     database = Database(get_db_settings())
-    return create_app(
-        settings=settings, version=VERSION, database=database, routers=[router],
+    app = create_app(
+        settings=settings, version=VERSION, database=database,
+        routers=[build_router(dev_sink=settings.otp_dev_sink), well_known],
         expected_revision=lambda: head_revision(SERVICE_ROOT),
         on_startup=_migrate_on_start if settings.run_migrations_on_start else None,
     )
+    app.state.runtime = build_runtime(settings, database)
+    return app
 
 
 app = build_app()

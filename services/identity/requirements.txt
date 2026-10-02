@@ -1,0 +1,2 @@
+# Third-party packages this service needs beyond the shared libs (installed by the Dockerfile).
+argon2-cffi>=25.1,<26

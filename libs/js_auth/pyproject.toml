@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "js-auth"
+version = "0.1.0"
+description = "JobSarathi authentication context and data-driven authorization checks shared by all services"
+requires-python = ">=3.12"
+dependencies = ["js-core", "pyjwt[crypto]>=2.9,<3"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

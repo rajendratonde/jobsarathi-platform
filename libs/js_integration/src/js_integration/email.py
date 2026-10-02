@@ -40,7 +40,7 @@ class SmtpSecurity(StrEnum):
 
 
 class EmailSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="EMAIL_", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="EMAIL_", extra="ignore", hide_input_in_errors=True)
 
     mode: str = "disabled"  # disabled | dev_log | smtp
     smtp_host: str | None = None

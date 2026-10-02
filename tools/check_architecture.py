@@ -8,12 +8,15 @@ Checks that the code still follows the approved design:
   5. no obvious hard-coded secret and no committed .env
   6. no product or vendor that belongs to an undecided T2-T6 decision appears in code or config
   7. local ports are bound to 127.0.0.1 only
+  8. an implemented table has exactly the catalogue's columns (none missing, none extra)
+  9. authorization is data-driven: no role names in code, no role compared with a literal
 
 Exit code 1 on any failure.  Usage:  python tools/check_architecture.py
 """
 
 from __future__ import annotations
 
+import ast
 import importlib
 import json
 import re
@@ -59,6 +62,9 @@ def check_models() -> None:
             extra = {c.name for c in table.columns} - v5_cols
             if extra:
                 fail(f"{db}.{name}: columns not in v5: {sorted(extra)}")
+            missing = v5_cols - {c.name for c in table.columns}
+            if missing:
+                fail(f"{db}.{name}: v5 columns missing from the model: {sorted(missing)}")
             for fk in table.foreign_keys:
                 if fk.column.table.name not in metadata.tables or fk.column.table.metadata is not metadata:
                     fail(f"{db}.{name}: foreign key to '{fk.target_fullname}' leaves {db}")
@@ -78,6 +84,53 @@ def check_imports() -> None:
         for path in (ROOT / "services" / key).rglob("*.py"):
             if pattern.search(path.read_text(encoding="utf-8")):
                 fail(f"{path.relative_to(ROOT)} imports another service's package")
+
+
+# Role names that must never drive authorization in code (roles are rows in identity_db).
+ROLE_WORDS = re.compile(r"^(super[ _-]?admin|platform[ _-]?admin(istrator)?|admin(istrator)?|recruiter|hr[ _-]?manager|"
+                        r"employer[ _-]?admin|candidate[ _-]?role|college[ _-]?admin)$", re.I)
+SEEDED_ROLE_CODES = {"PLATFORM_ADMIN", "CANDIDATE"}
+
+
+def _docstrings(tree: ast.AST) -> set[int]:
+    ids = set()
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and node.body:
+            first = node.body[0]
+            if isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant):
+                ids.add(id(first.value))
+    return ids
+
+
+def check_rbac_data_driven() -> None:
+    """Python: no role-name string literals and no role compared with a literal.
+    Frontend: no role names in source (it renders from /me/permissions)."""
+    for key in SERVICES:
+        for path in (ROOT / "services" / key).rglob("*.py"):
+            rel = path.relative_to(ROOT).as_posix()
+            if "/migrations/" in rel or "/tests/" in rel:
+                continue  # seeds are data; tests may name the roles they create
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+            docs = _docstrings(tree)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in docs:
+                    if ROLE_WORDS.match(node.value.strip()) or node.value in SEEDED_ROLE_CODES:
+                        fail(f"{rel}:{node.lineno}: role name '{node.value}' in code; use permission codes")
+                if isinstance(node, ast.Compare):
+                    sides = [node.left, *node.comparators]
+                    names = {getattr(side, "attr", getattr(side, "id", "")) for side in sides}
+                    if names & {"role_code", "roles", "role_name"} and any(
+                            isinstance(side, ast.Constant) and isinstance(side.value, str) for side in sides):
+                        fail(f"{rel}:{node.lineno}: role compared with a literal; authorize by permission code")
+    words = re.compile(r"""["'`](super ?admin|platform ?admin(istrator)?|PLATFORM_ADMIN|recruiter|hr ?manager)["'`]""",
+                       re.I)
+    frontend = ROOT / "frontend" / "src"
+    for path in [*frontend.rglob("*.ts"), *frontend.rglob("*.tsx")]:
+        if ".test." in path.name:
+            continue
+        match = words.search(path.read_text(encoding="utf-8"))
+        if match:
+            fail(f"{path.relative_to(ROOT).as_posix()}: role name {match.group(0)} in UI code; use permissions")
 
 
 def tracked_files() -> list[Path]:
@@ -101,7 +154,8 @@ def check_files() -> None:
         if rel.startswith(("docs/", "tools/check_architecture.py")) or "package-lock" in rel:
             continue
         text = path.read_text(encoding="utf-8", errors="ignore")
-        if "/tests/" not in f"/{rel}" and SECRET_LITERAL.search(text):
+        is_test = "/tests/" in f"/{rel}" or ".test." in path.name or path.name == "test-utils.ts"
+        if not is_test and SECRET_LITERAL.search(text):
             fail(f"{rel}: looks like a hard-coded secret")
         match = UNDECIDED.search(text)
         if match:
@@ -117,13 +171,14 @@ def main() -> int:
     print("Architecture check")
     check_models()
     check_imports()
+    check_rbac_data_driven()
     check_files()
     if failures:
         print("\nFAILED:")
         for message in failures:
             print(f"  - {message}")
         return 1
-    print("\nOK: v5 tables only, no cross-database FK, no cross-service imports, no secrets, no T2-T6 products")
+    print("\nOK: v5 tables only, no cross-database FK, no cross-service imports, data-driven RBAC, no secrets, no T2-T6 products")
     return 0
 
 

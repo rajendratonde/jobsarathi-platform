@@ -36,7 +36,7 @@ class RequestContextMiddleware:
         tokens = [
             context.correlation_id_var.set(correlation_id),
             context.request_id_var.set(request_id),
-            context.client_ip_var.set(client[0] if client else None),
+            context.client_ip_var.set(context.accept_ip(client[0]) if client else None),
             context.user_agent_var.set((headers.get("user-agent") or "")[:300] or None),
         ]
         started = time.perf_counter()

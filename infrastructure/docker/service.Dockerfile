@@ -11,12 +11,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /srv
 
 COPY libs/ /srv/libs/
-RUN pip install /srv/libs/js_core /srv/libs/js_audit /srv/libs/js_outbox /srv/libs/js_integration
+RUN pip install /srv/libs/js_core /srv/libs/js_audit /srv/libs/js_outbox /srv/libs/js_integration \
+    /srv/libs/js_auth /srv/libs/js_approval
 
 ARG SERVICE
 ARG PACKAGE
 COPY services/${SERVICE}/ /srv/service/
-RUN pip install --no-deps /srv/service
+# Per-service third-party packages (e.g. argon2-cffi for Identity), then the service itself.
+RUN if [ -f /srv/service/requirements.txt ]; then pip install -r /srv/service/requirements.txt; fi \
+    && pip install --no-deps /srv/service
 
 COPY infrastructure/docker/entrypoint.sh /srv/entrypoint.sh
 RUN chmod 0755 /srv/entrypoint.sh \

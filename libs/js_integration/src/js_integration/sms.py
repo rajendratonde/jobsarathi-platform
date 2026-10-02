@@ -22,7 +22,7 @@ log = logging.getLogger("js_integration.sms")
 
 
 class SmsSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="SMS_", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="SMS_", extra="ignore", hide_input_in_errors=True)
     mode: str = "disabled"  # disabled | dev_log  (a provider mode is added once T5/Q1 are decided)
 
 

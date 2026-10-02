@@ -7,6 +7,7 @@ phase; until then they stay empty.
 
 from __future__ import annotations
 
+import ipaddress
 import re
 import uuid
 from contextvars import ContextVar
@@ -23,6 +24,14 @@ _SAFE_ID = re.compile(r"^[A-Za-z0-9._-]{8,64}$")
 
 def new_id() -> str:
     return uuid.uuid4().hex
+
+
+def accept_ip(value: str | None) -> str | None:
+    """Only a real IP address is kept (it is stored in inet columns); anything else becomes None."""
+    try:
+        return str(ipaddress.ip_address(value)) if value else None
+    except ValueError:
+        return None
 
 
 def accept_correlation_id(value: str | None) -> str | None:

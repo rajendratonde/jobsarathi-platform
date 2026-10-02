@@ -1,7 +1,8 @@
 {
  "source": "JobSarathi — Detailed ERD & Database Design, version 5",
  "applied_changes": [
-  "E1: auth_identities.password_change_required"
+  "E1: auth_identities.password_change_required",
+  "EMAIL: email_settings, email_templates, email_delivery_logs in engagement_db (approved 2026-10-02)"
  ],
  "deferred_changes": [
   "E2: outbox_events status/failed_at (only when a broker is introduced)"
@@ -8875,6 +8876,488 @@
       "(occurred_at) WHERE published_at IS NULL"
      ],
      "retention": "Delete 30 days after publishing; 90 days unpublished while no broker exists"
+    },
+    "email_settings": {
+     "category": "Configuration",
+     "status": "R",
+     "soft_delete": "NO",
+     "columns": [
+      {
+       "name": "setting_code",
+       "type": "varchar(30)",
+       "nullable": false,
+       "default": "'DEFAULT'",
+       "keys": "UK",
+       "note": ""
+      },
+      {
+       "name": "is_enabled",
+       "type": "boolean",
+       "nullable": false,
+       "default": "false",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "delivery_mode",
+       "type": "varchar(15)",
+       "nullable": false,
+       "default": "'DISABLED'",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "smtp_host",
+       "type": "varchar(255)",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "smtp_port",
+       "type": "integer",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "smtp_security",
+       "type": "varchar(10)",
+       "nullable": false,
+       "default": "'STARTTLS'",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "smtp_username",
+       "type": "varchar(254)",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": "Never returned by APIs (public view says only whether it is set)"
+      },
+      {
+       "name": "smtp_password_ref",
+       "type": "varchar(300)",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": "Secret REFERENCE only (env:NAME or file:/path); the password is never stored"
+      },
+      {
+       "name": "from_email",
+       "type": "varchar(254)",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "from_name",
+       "type": "varchar(120)",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "reply_to_email",
+       "type": "varchar(254)",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "timeout_seconds",
+       "type": "smallint",
+       "nullable": false,
+       "default": "10",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "id",
+       "type": "uuid",
+       "nullable": false,
+       "default": "app-generated UUIDv7",
+       "keys": "PK",
+       "note": "Internal primary key"
+      },
+      {
+       "name": "updated_at",
+       "type": "timestamptz",
+       "nullable": false,
+       "default": "now()",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "updated_by",
+       "type": "uuid",
+       "nullable": true,
+       "default": "",
+       "keys": "XS>Identity",
+       "note": ""
+      },
+      {
+       "name": "created_at",
+       "type": "timestamptz",
+       "nullable": false,
+       "default": "now()",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "created_by",
+       "type": "uuid",
+       "nullable": true,
+       "default": "",
+       "keys": "XS>Identity",
+       "note": "User who created it; NULL for system"
+      },
+      {
+       "name": "version",
+       "type": "integer",
+       "nullable": false,
+       "default": "1",
+       "keys": "",
+       "note": ""
+      }
+     ],
+     "uniques": [
+      "setting_code (full unique)"
+     ],
+     "checks": [
+      "delivery_mode IN ('DISABLED','DEV_LOG','SMTP')",
+      "NOT is_enabled OR delivery_mode <> 'DISABLED'",
+      "smtp_port IS NULL OR smtp_port BETWEEN 1 AND 65535",
+      "timeout_seconds BETWEEN 1 AND 120",
+      "delivery_mode <> 'SMTP' OR (smtp_host IS NOT NULL AND smtp_port IS NOT NULL AND from_email IS NOT NULL)",
+      "smtp_security IN ('STARTTLS','SSL','NONE')",
+      "smtp_password_ref IS NULL OR smtp_password_ref ~ '^(env:[A-Za-z_][A-Za-z0-9_]*|file:/.+)$'"
+     ],
+     "indexes": [],
+     "retention": "Keep (one row per setting_code)",
+     "approved_change": "EMAIL (2026-10-02): approved email data model; owner Engagement"
+    },
+    "email_templates": {
+     "category": "Master",
+     "status": "R",
+     "soft_delete": "YES",
+     "columns": [
+      {
+       "name": "template_code",
+       "type": "varchar(60)",
+       "nullable": false,
+       "default": "",
+       "keys": "",
+       "note": "Snapshot of the template code used"
+      },
+      {
+       "name": "language_code",
+       "type": "varchar(10)",
+       "nullable": false,
+       "default": "'en'",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "name",
+       "type": "varchar(120)",
+       "nullable": false,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "description",
+       "type": "text",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "subject",
+       "type": "varchar(200)",
+       "nullable": false,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "body_text",
+       "type": "text",
+       "nullable": false,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "body_html",
+       "type": "text",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "allowed_variables",
+       "type": "jsonb",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": "Placeholder names the body may use"
+      },
+      {
+       "name": "status",
+       "type": "varchar(15)",
+       "nullable": false,
+       "default": "'DRAFT'",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "id",
+       "type": "uuid",
+       "nullable": false,
+       "default": "app-generated UUIDv7",
+       "keys": "PK",
+       "note": "Internal primary key"
+      },
+      {
+       "name": "updated_at",
+       "type": "timestamptz",
+       "nullable": false,
+       "default": "now()",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "updated_by",
+       "type": "uuid",
+       "nullable": true,
+       "default": "",
+       "keys": "XS>Identity",
+       "note": ""
+      },
+      {
+       "name": "created_at",
+       "type": "timestamptz",
+       "nullable": false,
+       "default": "now()",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "created_by",
+       "type": "uuid",
+       "nullable": true,
+       "default": "",
+       "keys": "XS>Identity",
+       "note": "User who created it; NULL for system"
+      },
+      {
+       "name": "deleted_at",
+       "type": "timestamptz",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "deleted_by",
+       "type": "uuid",
+       "nullable": true,
+       "default": "",
+       "keys": "XS>Identity",
+       "note": ""
+      },
+      {
+       "name": "version",
+       "type": "integer",
+       "nullable": false,
+       "default": "1",
+       "keys": "",
+       "note": ""
+      }
+     ],
+     "uniques": [
+      "(template_code, language_code) WHERE deleted_at IS NULL"
+     ],
+     "checks": [
+      "deleted_at IS NULL OR deleted_by IS NOT NULL",
+      "status IN ('DRAFT','ACTIVE','INACTIVE')",
+      "template_code ~ '^[A-Z][A-Z0-9_]*$'"
+     ],
+     "indexes": [
+      "ix_email_templates_status"
+     ],
+     "retention": "Keep; soft delete",
+     "approved_change": "EMAIL (2026-10-02): approved email data model; owner Engagement"
+    },
+    "email_delivery_logs": {
+     "category": "Transaction",
+     "status": "R",
+     "soft_delete": "NO",
+     "columns": [
+      {
+       "name": "template_id",
+       "type": "uuid",
+       "nullable": true,
+       "default": "",
+       "keys": "FK>email_templates",
+       "note": ""
+      },
+      {
+       "name": "template_code",
+       "type": "varchar(60)",
+       "nullable": false,
+       "default": "",
+       "keys": "",
+       "note": "Snapshot of the template code used"
+      },
+      {
+       "name": "recipient_masked",
+       "type": "varchar(254)",
+       "nullable": false,
+       "default": "",
+       "keys": "",
+       "note": "e.g. a***@example.com"
+      },
+      {
+       "name": "recipient_hash",
+       "type": "char(64)",
+       "nullable": false,
+       "default": "",
+       "keys": "",
+       "note": "SHA-256/HMAC of the normalized address, for lookups"
+      },
+      {
+       "name": "recipient_user_id",
+       "type": "uuid",
+       "nullable": true,
+       "default": "",
+       "keys": "XS>Identity",
+       "note": "Identity user, if known (no cross-database FK)"
+      },
+      {
+       "name": "organization_id",
+       "type": "uuid",
+       "nullable": true,
+       "default": "",
+       "keys": "XS>Identity",
+       "note": "Identity organization (no FK)"
+      },
+      {
+       "name": "source_service",
+       "type": "varchar(30)",
+       "nullable": false,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "source_reference",
+       "type": "varchar(100)",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": "Caller's idempotency reference (e.g. outbox event id)"
+      },
+      {
+       "name": "delivery_mode",
+       "type": "varchar(15)",
+       "nullable": false,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "status",
+       "type": "varchar(15)",
+       "nullable": false,
+       "default": "'QUEUED'",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "provider_reference",
+       "type": "varchar(200)",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "error_code",
+       "type": "varchar(60)",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "attempts",
+       "type": "smallint",
+       "nullable": false,
+       "default": "0",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "created_at",
+       "type": "timestamptz",
+       "nullable": false,
+       "default": "now()",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "sent_at",
+       "type": "timestamptz",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "failed_at",
+       "type": "timestamptz",
+       "nullable": true,
+       "default": "",
+       "keys": "",
+       "note": ""
+      },
+      {
+       "name": "id",
+       "type": "uuid",
+       "nullable": false,
+       "default": "app-generated UUIDv7",
+       "keys": "PK",
+       "note": "Internal primary key"
+      }
+     ],
+     "uniques": [
+      "(source_service, source_reference) WHERE source_reference IS NOT NULL"
+     ],
+     "checks": [
+      "attempts >= 0",
+      "status <> 'SENT' OR sent_at IS NOT NULL",
+      "delivery_mode IN ('DISABLED','DEV_LOG','SMTP')",
+      "status IN ('QUEUED','SENT','FAILED','SKIPPED')",
+      "status <> 'FAILED' OR error_code IS NOT NULL"
+     ],
+     "indexes": [
+      "ix_email_delivery_logs_recipient",
+      "ix_email_delivery_logs_status",
+      "ix_email_delivery_logs_template"
+     ],
+     "retention": "Retention to decide (proposal: 12 months)",
+     "approved_change": "EMAIL (2026-10-02): approved email data model; owner Engagement"
     }
    }
   },

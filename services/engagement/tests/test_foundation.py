@@ -15,6 +15,8 @@ from js_core.migrations import alembic_config
 SERVICE_ROOT = Path(__file__).resolve().parents[1]
 
 FOUNDATION_TABLES = {"audit_logs", "outbox_events"}
+EMAIL_TABLES = {"email_settings", "email_templates", "email_delivery_logs"}  # approved 2026-10-02
+ENGAGEMENT_TABLES = FOUNDATION_TABLES | EMAIL_TABLES
 
 
 def test_live_and_ready(app_client):
@@ -39,7 +41,7 @@ def test_migrations_match_models_exactly(migrated):
         tables = set(inspect(conn).get_table_names()) - {"alembic_version"}
     engine.dispose()
     assert diff == [], diff
-    assert tables == FOUNDATION_TABLES
+    assert tables == ENGAGEMENT_TABLES
 
 
 def test_downgrade_and_upgrade_again(migrated):
@@ -49,7 +51,8 @@ def test_downgrade_and_upgrade_again(migrated):
     command.upgrade(cfg, "head")
 
 
-def test_only_foundation_tables_and_no_foreign_keys():
-    assert set(Base.metadata.tables) == FOUNDATION_TABLES
+def test_only_approved_tables_and_no_foreign_keys_leave_the_database():
+    assert set(Base.metadata.tables) == ENGAGEMENT_TABLES
     for table in Base.metadata.tables.values():
-        assert not table.foreign_keys, f"{table.name} has a foreign key"
+        for fk in table.foreign_keys:
+            assert fk.column.table.name in ENGAGEMENT_TABLES, f"{table.name} -> {fk.target_fullname}"

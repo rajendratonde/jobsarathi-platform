@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "JobSarathi Identity & Access service"
 requires-python = ">=3.12"
 # Installed with --no-deps after the shared libs (see Dockerfile / docs/local-development.md).
-dependencies = ["js-core", "js-audit", "js-outbox", "js-integration"]
+dependencies = ["js-core", "js-audit", "js-outbox", "js-integration", "js-auth", "js-approval", "argon2-cffi>=25.1,<26"]
 
 [tool.setuptools.packages.find]
 include = ["identity_service*"]

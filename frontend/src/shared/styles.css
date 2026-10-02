@@ -31,3 +31,56 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--gold); outline-
 .pill-loading { background: #eef1f8; color: var(--muted); }
 .pill-unavailable, .pill-error { background: #fdebe3; color: var(--warn); }
 @media (max-width: 560px) { .status-table th:nth-child(4), .status-table td:nth-child(4) { display: none; } }
+
+/* ---- Identity & Access screens ---- */
+.topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end; }
+.who { font-size: 0.9rem; opacity: 0.9; }
+button.ghost { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.4); padding: 6px 10px; }
+.org-switch select { padding: 6px 8px; border-radius: 8px; border: 0; max-width: 220px; }
+.subnav { display: flex; gap: 4px; padding: 8px 16px; background: var(--paper); border-bottom: 1px solid var(--line); overflow-x: auto; }
+.subnav a { padding: 6px 10px; border-radius: 8px; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.subnav a.active { background: var(--navy); color: #fff; }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.card summary { cursor: pointer; font-weight: 600; }
+.narrow { max-width: 420px; margin: 32px auto; }
+.form { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.form.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: end; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; font-weight: 500; }
+label.check { flex-direction: row; align-items: center; gap: 8px; font-weight: 400; }
+input, select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; min-width: 0; }
+button.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+button.link { border: 0; background: none; padding: 0 4px; color: #1d4ed8; text-decoration: underline; }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+.tabs { display: flex; gap: 6px; margin-top: 12px; }
+.tabs [aria-selected='true'] { background: var(--navy); color: #fff; border-color: var(--navy); }
+.error { color: var(--warn); background: #fdebe3; padding: 8px 10px; border-radius: 8px; }
+.error .ref { opacity: 0.7; font-size: 0.8rem; }
+.notice { background: #e3f5ec; color: var(--ok); padding: 8px 10px; border-radius: 8px; word-break: break-word; }
+.hint, .small { font-size: 0.8rem; }
+.inline { display: flex; gap: 6px; }
+.table-wrap { overflow-x: auto; }
+table.data { width: 100%; border-collapse: collapse; background: var(--paper); border: 1px solid var(--line); }
+table.data th, table.data td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 0.9rem; vertical-align: top; }
+table.data tr.selected { background: #fff8e1; }
+table.matrix td.cell { text-align: center; }
+table.matrix .granted { color: var(--ok); font-weight: 700; }
+table.matrix .denied { color: var(--muted); }
+tr.inactive { opacity: 0.5; }
+.pager { display: flex; gap: 12px; align-items: center; margin: 12px 0; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0; }
+.picker { display: grid; gap: 8px; }
+.picker fieldset { border: 1px solid var(--line); border-radius: 8px; }
+.pill-active, .pill-approved, .pill-applied { background: #e3f5ec; color: var(--ok); }
+.pill-disabled, .pill-revoked, .pill-rejected, .pill-locked, .pill-superseded { background: #fdebe3; color: var(--warn); }
+.pill-pending, .pill-pending_approval, .pill-draft, .pill-withdrawn, .pill-system { background: #eef1f8; color: var(--muted); margin-left: 6px; }
+.choices, .queue, .plain, .cards { list-style: none; padding: 0; display: grid; gap: 8px; }
+.choices button { width: 100%; text-align: left; }
+.cards { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.cards a { display: block; padding: 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 12px; color: var(--ink); text-decoration: none; font-weight: 600; }
+.proposal { background: #f3f4f8; padding: 8px; border-radius: 8px; overflow-x: auto; font-size: 0.8rem; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 560px) {
+  .topbar { padding: 10px 12px; }
+  .who { display: none; }
+  .narrow { margin: 16px auto; }
+}

@@ -8,7 +8,8 @@
 | Python stack: FastAPI, SQLAlchemy 2, Alembic, Pydantic; React | Approved | Foundation |
 | Middleware disabled initially (`MIDDLEWARE_ENABLED=false`) | Approved | `js_core.config`, `js_integration` |
 | No message broker; outbox only | Approved | `js_outbox` |
-| E1 — `auth_identities.password_change_required` | Approved | Recorded in `docs/erd/v5-table-catalogue.json`; the table itself is created in the Identity phase |
+| E1 — `auth_identities.password_change_required` | Approved, implemented | `identity_db` migration `0002_identity_access` |
+| Email data model: `email_settings`, `email_templates`, `email_delivery_logs` | Approved 2026-10-02, implemented (data model only) | `engagement_db` migration `0002_email_tables`; catalogue `applied_changes` |
 
 ## Deferred
 
@@ -22,24 +23,38 @@
 |---|---|
 | T2 API Gateway | `gateway/` is empty; services are reached directly on local ports |
 | T3 Git host / CI/CD | Local git only, no remote; `tools/check_all.sh` is what CI will run |
-| T4 Authentication | No auth in Foundation |
+| T4 Authentication | Not decided as a product. Identity implements the in-house design from v5 (Argon2id passwords, OTP, ES256 tokens, sessions); an external IdP can replace the sign-in part later without changing RBAC |
 | T5 Middleware / providers (SMS, email provider) | Email is generic SMTP; SMS has no provider |
 | T6 Other | — |
 | Secret store product (T1 TBD) | `env:` / `file:` references only; cloud stores refused |
-| Q2 OTP visibility for testers | SMS dev sink logs only the last 4 digits; OTP codes are an Identity-phase decision |
+| Q2 OTP visibility for testers | Decided for development only: `OTP_DEV_SINK=true` logs the code and serves `GET /v1/dev/otp`; refused by settings outside local/development/test. Production never exposes codes |
+| Q7 Which roles are privileged | `USER_ROLE_ASSIGNMENT` approval policy is seeded **off**; switching it on is a data change. Per-role "privileged" selection would need a new column — NEW CHANGE if wanted |
 
-## NEW CHANGE — REQUIRES EXPLICIT APPROVAL
+## Email data model — owner decision (approved tables, 2026-10-02)
 
-**Email settings, templates and delivery logs as database tables.** The brief requires
-email templates and delivery logs, which need tables v5 does not have. Proposal for
-approval (not implemented):
+**Owner: Engagement (`engagement_db`).** Each of the eight services was considered:
 
-| Proposed table | Owner (proposal) | Notes |
+| Service | Fit | Why not / why |
 |---|---|---|
-| `email_settings` | Engagement | One active configuration; holds the SMTP **secret reference**, never the password |
-| `email_templates` | Engagement | Code, subject, body, status; soft delete YES |
-| `email_delivery_logs` | Engagement | Recipient (masked), template, status, provider reference, error code; no body, no secret; retention to decide |
+| Identity & Access | No | Sends OTP/password mails, but outbound mail is not identity. Keeping SMTP egress and template editing out of the most security-critical service keeps its attack surface and blast radius small |
+| Candidate, Employer, Job, Application, Learning | No | Each *triggers* emails; owning the channel in any one of them would make the others depend on it for a cross-cutting concern |
+| Reference Data | No | Static lists; delivery logs are high-volume operational data |
+| **Engagement** | **Yes** | Already the service for outbound/inbound user communication (enquiries, reports) and has no synchronous dependencies. Other services publish events (outbox) or call one Engagement API to send; templates and delivery history live with the channel |
 
-Other services would ask Engagement to send an email through its API instead of holding
-SMTP settings themselves. Owner service and retention need sign-off before the tables are
-added to v5.
+Rules implemented in the data model:
+
+* `email_settings.smtp_password_ref` holds a **secret reference** (`env:NAME` / `file:/path`); a CHECK constraint refuses anything else, and no column can hold a password. `EmailSettings.public_view()` reports only `smtp_password_set` / `smtp_username_set`.
+* `email_templates` soft delete YES; one live template per (code, language).
+* `email_delivery_logs`: masked recipient + hash, template code, status, provider reference, error code; **no subject, no body, no secret**; idempotent on (source_service, source_reference).
+* No provider is chosen (T5): delivery modes are DISABLED / DEV_LOG / SMTP (generic).
+* Still open: retention for `email_delivery_logs` (proposal 12 months); the Engagement send API comes with the Engagement phase.
+
+## Identity & Access — implementation notes
+
+* Authorization is data: permission codes and scopes from `identity_db`; no role code or name is checked in code (enforced by `tools/check_architecture.py`).
+* Any access change raises `users.authz_version`; tokens carrying an older `av` get `401 TOKEN_STALE` and the client refreshes.
+* Identity resolves permissions on every request (`AUTHZ_CACHE_SECONDS=0`); other services may cache up to 60 s keyed by `authz_version`.
+* `permissions` has no `version` column in v5; Maker-Checker uses a fingerprint of `updated_at`/`is_active`/`deleted_at` instead (no schema change).
+* Permissions Identity enforces itself (`declared_by_service = 'identity'`) cannot be disabled or deleted, so access management cannot lock itself out. The system role `PLATFORM_ADMIN` can gain permissions but not lose them, and cannot be renamed, disabled or deleted.
+* The last member of an organization holding `ROLE.ASSIGN` cannot be suspended, removed or lose that assignment.
+* `POST /internal/organizations` has no stored idempotency key (v5 has no column for it); callers must not blindly retry. Adding one would be a NEW CHANGE.
