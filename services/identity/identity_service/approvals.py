@@ -17,13 +17,13 @@ import zlib
 from datetime import UTC, datetime
 from typing import Any
 
-from js_approval import ApprovalEngine
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from identity_service.authz import bump_authz, holders_of_permission, holders_of_roles
 from identity_service.common import audit, event
 from identity_service.models import Permission, Role, RolePermission, UserRoleAssignment
+from js_approval import ApprovalEngine
 
 
 def _now() -> datetime:

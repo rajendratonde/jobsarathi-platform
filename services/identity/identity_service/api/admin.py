@@ -6,7 +6,6 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, Query, Response, status
-from js_auth.context import Authorized
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -34,6 +33,7 @@ from identity_service.common import parse_if_match
 from identity_service.models import AuthIdentity, Organization, OrganizationMembership, User
 from identity_service.runtime import Runtime, db_session, require, runtime
 from identity_service.services import directory as svc
+from js_auth.context import Authorized
 from js_core.responses import Page, PageParams, page_params
 
 router = APIRouter()

@@ -31,6 +31,7 @@ services:
   postgres:
     image: postgres:16-alpine
     container_name: jobsarathi-platform-pg
+    restart: unless-stopped
     environment:
       POSTGRES_USER: jobsarathi_admin
       POSTGRES_PASSWORD: ${PG_ADMIN_PASSWORD:?set PG_ADMIN_PASSWORD in .env}
@@ -62,6 +63,10 @@ services:
       DEFAULT_SIGNUP_ROLE_CODE: CANDIDATE
       BOOTSTRAP_ADMIN_PASSWORD_REF: env:LOCAL_ADMIN_PASSWORD
       LOCAL_ADMIN_PASSWORD: ${LOCAL_ADMIN_PASSWORD:-}
+      # Callers of /internal/* routes and their public keys (tools/local_keys.py).
+      SERVICE_PUBLIC_KEYS: '{"reference": "file:/run/secrets/reference_service.pub"}'
+    volumes:
+      - ./secrets:/run/secrets:ro
     ports: ["127.0.0.1:8001:8000"]
 
   candidate:
@@ -103,7 +108,16 @@ services:
   reference:
     <<: *service
     build: { <<: *build, args: { SERVICE: reference, PACKAGE: reference_service } }
-    environment: { <<: *service-env, SERVICE_NAME: reference, DB_NAME: reference_db, DB_USER: reference_service_role, DB_MIGRATION_USER: reference_migration_role }
+    environment:
+      <<: *service-env
+      SERVICE_NAME: reference
+      DB_NAME: reference_db
+      DB_USER: reference_service_role
+      DB_MIGRATION_USER: reference_migration_role
+      IDENTITY_URL: http://identity:8000
+      SERVICE_PRIVATE_KEY_REF: file:/run/secrets/reference_service.pem
+    volumes:
+      - ./secrets:/run/secrets:ro
     ports: ["127.0.0.1:8008:8000"]
 
 volumes:

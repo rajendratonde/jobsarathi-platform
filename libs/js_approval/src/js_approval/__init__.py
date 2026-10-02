@@ -10,10 +10,11 @@ entity type; this package enforces the rules every service must share:
 * the checker holds the policy's checker permission in scope for the request's organization
 * the record version must equal the submitted and the reviewed version, else SUPERSEDED (409)
 * a rejection needs a reason of at least 5 characters
+* a CREATE proposal (version 0) is valid only while the record does not exist yet
 """
 
 from js_approval.models import ApprovalActionMixin, ApprovalPolicyMixin, ApprovalRequestMixin
-from js_approval.service import ApprovalEngine, ApprovalHandler, ApprovalModels
+from js_approval.service import NEW_RECORD_VERSION, ApprovalEngine, ApprovalHandler, ApprovalModels
 
 __all__ = ["ApprovalPolicyMixin", "ApprovalRequestMixin", "ApprovalActionMixin",
-           "ApprovalEngine", "ApprovalHandler", "ApprovalModels"]
+           "ApprovalEngine", "ApprovalHandler", "ApprovalModels", "NEW_RECORD_VERSION"]

@@ -6,7 +6,6 @@ import re
 import uuid
 from datetime import UTC, datetime
 
-from js_auth.context import Authorized, Scope
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -35,6 +34,7 @@ from identity_service.runtime import Runtime
 from identity_service.security import hash_password, mask_email, normalize_mobile, temporary_password
 from identity_service.services.rbac import ChangeResult, _submit_or_apply
 from js_audit import ActorType, AuditResult
+from js_auth.context import Authorized, Scope
 from js_core.errors import Conflict, FieldError, NotFound, PermissionDenied, ValidationFailed
 
 # The permission that manages access in an organization. Removing its last holder would

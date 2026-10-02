@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "js-reference"
+version = "0.1.0"
+description = "JobSarathi Reference Data client with a local cache, used by services that validate reference codes"
+requires-python = ">=3.12"
+dependencies = ["js-core"]
+
+[tool.setuptools.packages.find]
+where = ["src"]

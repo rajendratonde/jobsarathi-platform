@@ -6,8 +6,6 @@ import uuid
 
 import pytest
 from identity_test_helpers import PASSWORD, uniq
-from js_auth.context import Scope, widest
-from js_auth.service_tokens import sign_service_token
 from pydantic import ValidationError
 
 from identity_service.config import Settings
@@ -19,6 +17,8 @@ from identity_service.security import (
     temporary_password,
     verify_password,
 )
+from js_auth.context import Scope, widest
+from js_auth.service_tokens import sign_service_token
 from js_core.config import Environment
 from js_core.errors import ValidationFailed
 

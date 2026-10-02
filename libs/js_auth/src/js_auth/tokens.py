@@ -14,7 +14,7 @@ from dataclasses import dataclass
 import jwt
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from js_auth.keys import ALGORITHM, KeyRing
+from js_auth.keys import ALGORITHM, KeyRing, VerifyingKeys
 
 
 class TokenSettings(BaseSettings):
@@ -58,10 +58,10 @@ def issue_access_token(ring: KeyRing, settings: TokenSettings, *, user_id: uuid.
     return token, exp
 
 
-def verify_access_token(ring: KeyRing, settings: TokenSettings, token: str) -> AccessClaims:
+def verify_access_token(ring: KeyRing | VerifyingKeys, settings: TokenSettings, token: str) -> AccessClaims:
     try:
         kid = jwt.get_unverified_header(token).get("kid")
-        key = ring.public_keys.get(kid or "")
+        key = ring.key_for(kid or "")
         if key is None:
             raise TokenError("Unknown signing key")
         payload = jwt.decode(token, key, algorithms=[ALGORITHM], audience=settings.audience, issuer=settings.issuer,

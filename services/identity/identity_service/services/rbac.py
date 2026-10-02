@@ -9,7 +9,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from js_auth.context import Authorized, Scope
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -32,6 +31,7 @@ from identity_service.models import (
 )
 from identity_service.runtime import Runtime
 from js_audit import ActorType
+from js_auth.context import Authorized, Scope
 from js_core.errors import Conflict, FieldError, NotFound, ValidationFailed
 
 

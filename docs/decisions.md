@@ -58,3 +58,22 @@ Rules implemented in the data model:
 * Permissions Identity enforces itself (`declared_by_service = 'identity'`) cannot be disabled or deleted, so access management cannot lock itself out. The system role `PLATFORM_ADMIN` can gain permissions but not lose them, and cannot be renamed, disabled or deleted.
 * The last member of an organization holding `ROLE.ASSIGN` cannot be suspended, removed or lose that assignment.
 * `POST /internal/organizations` has no stored idempotency key (v5 has no column for it); callers must not blindly retry. Adding one would be a NEW CHANGE.
+
+## Reference Data — implementation notes (2026-10-02)
+
+* Tables exactly as v5 section 19: eleven lists + `lookup_values` + the shared Maker-Checker tables. Soft delete is NO
+  everywhere (v5): values are deactivated, never deleted, and codes never change or get reused.
+* v5 reference tables have no `version` column. Optimistic locking and the Maker-Checker version check use a
+  fingerprint of `updated_at`/`is_active` (same approach as Identity `permissions`). No schema change.
+* Maker-Checker: one approval policy per list, seeded **off** (v5 "off by default"); maker `REFERENCE.EDIT`, checker
+  `REFERENCE.APPROVE` with ALL scope. Changes are proposals applied on approval; a CREATE proposal carries version 0
+  and is valid only while the record does not exist (shared engine extension, no schema change).
+* `REFERENCE.EDIT` / `REFERENCE.APPROVE` are rows in identity_db (Identity data migration 0004), granted to the
+  protected system role. No role is named in Reference code.
+* Reference verifies tokens with Identity's JWKS and asks Identity's internal authz API for permissions with its own
+  service token (cached 60 s by authz_version; Identity unreachable = 503, fail closed). Local keys come from
+  `tools/local_keys.py`.
+* Public read `GET /v1/reference/{list}` needs no sign-in, returns codes not ids, and supports ETag / 304.
+  Children of an inactive parent are hidden.
+* `libs/js_reference` is the client cache other services will use (ETag revalidation, last good copy, 503 with no
+  copy). Not yet wired into another service: those services are not started.

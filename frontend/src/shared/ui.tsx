@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 import { ApiError } from '../api/errors';
 
@@ -26,15 +26,21 @@ export function useLoad<T>(load: () => Promise<T>, deps: unknown[]) {
   const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
   const run = useCallback(load, deps);
+  // Only the latest request may update state: when deps change quickly (e.g. switching
+  // lists), an earlier, slower response must not overwrite the newer one.
+  const latest = useRef(0);
   const reload = useCallback(async () => {
+    const ticket = ++latest.current;
     setLoading(true);
     try {
-      setData(await run());
+      const result = await run();
+      if (ticket !== latest.current) return;
+      setData(result);
       setError(null);
     } catch (e) {
-      setError(e);
+      if (ticket === latest.current) setError(e);
     } finally {
-      setLoading(false);
+      if (ticket === latest.current) setLoading(false);
     }
   }, [run]);
   useEffect(() => { void reload(); }, [reload]);

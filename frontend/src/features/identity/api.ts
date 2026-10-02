@@ -116,12 +116,17 @@ export const identityApi = {
     apiRequest<ChangeOut>(svc, `/v1/permissions/${id}/status`, { method: 'PATCH', body: { is_active } }),
   matrix: (roleId?: string) => apiRequest<Matrix>(svc, `/v1/rbac/matrix${q({ role_id: roleId })}`),
 
-  // approvals
-  approvals: (status: string) => apiRequest<Page<Approval>>(svc, `/v1/approvals${q({ status, size: 50 })}`),
-  approval: (id: string) => apiRequest<ApprovalDetail>(svc, `/v1/approvals/${id}`),
-  approve: (id: string, reviewed_version: number) =>
-    apiRequest<ApprovalDetail>(svc, `/v1/approvals/${id}/approve`, { method: 'POST', body: { reviewed_version } }),
-  reject: (id: string, reviewed_version: number, reason: string) =>
-    apiRequest<ApprovalDetail>(svc, `/v1/approvals/${id}/reject`, { method: 'POST', body: { reviewed_version, reason } }),
-  withdraw: (id: string) => apiRequest<ApprovalDetail>(svc, `/v1/approvals/${id}/withdraw`, { method: 'POST' }),
 };
+
+/** Maker-Checker queue of one service. Identity and Reference Data expose the same routes. */
+export function approvalsApi(service: string) {
+  return {
+    list: (status: string) => apiRequest<Page<Approval>>(service, `/v1/approvals${q({ status, size: 50 })}`),
+    get: (id: string) => apiRequest<ApprovalDetail>(service, `/v1/approvals/${id}`),
+    approve: (id: string, reviewed_version: number) =>
+      apiRequest<ApprovalDetail>(service, `/v1/approvals/${id}/approve`, { method: 'POST', body: { reviewed_version } }),
+    reject: (id: string, reviewed_version: number, reason: string) =>
+      apiRequest<ApprovalDetail>(service, `/v1/approvals/${id}/reject`, { method: 'POST', body: { reviewed_version, reason } }),
+    withdraw: (id: string) => apiRequest<ApprovalDetail>(service, `/v1/approvals/${id}/withdraw`, { method: 'POST' }),
+  };
+}

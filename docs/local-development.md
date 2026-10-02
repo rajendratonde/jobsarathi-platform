@@ -21,8 +21,12 @@ Windows `localhost` may resolve to IPv6 and hang.
 ## 2. Database and services in Docker
 
 ```bash
+python tools/local_keys.py   # once: local service-to-service keys (git-ignored)
 docker compose -f infrastructure/local/docker-compose.yml --env-file .env up -d --build
 ```
+
+* Reference Data verifies sign-ins with Identity's public keys and asks Identity for
+  permissions with a service token signed by `infrastructure/local/secrets/reference_service.pem`.
 
 * PostgreSQL 16 on `127.0.0.1:5434` with eight databases (`identity_db` … `reference_db`).
 * For each database: `<svc>_migration_role` owns the schema, `<svc>_service_role` is the

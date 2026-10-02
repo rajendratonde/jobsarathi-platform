@@ -12,6 +12,7 @@ import base64
 import hashlib
 import logging
 from dataclasses import dataclass
+from typing import Protocol
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -32,11 +33,20 @@ def _b64(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
 
 
+class VerifyingKeys(Protocol):
+    """Anything that can look up a public key by ``kid`` (a local KeyRing or Identity's JWKS)."""
+
+    def key_for(self, kid: str) -> ec.EllipticCurvePublicKey | None: ...
+
+
 @dataclass(frozen=True)
 class KeyRing:
     kid: str
     private_key: ec.EllipticCurvePrivateKey | None
     public_keys: dict[str, ec.EllipticCurvePublicKey]
+
+    def key_for(self, kid: str) -> ec.EllipticCurvePublicKey | None:
+        return self.public_keys.get(kid)
 
     def jwks(self) -> dict:
         keys = []
@@ -96,3 +106,19 @@ def generate_private_key_pem() -> str:
     key = ec.generate_private_key(ec.SECP256R1())
     return key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
                              serialization.NoEncryption()).decode()
+
+
+def load_private_key(ref: SecretStr) -> ec.EllipticCurvePrivateKey:
+    """A service's own signing key (service-to-service tokens), from a secret reference."""
+    resolved = secrets.resolve(ref)
+    return _load_private(resolved.get_secret_value())  # type: ignore[union-attr]
+
+
+def public_key_from_jwk(jwk: dict) -> ec.EllipticCurvePublicKey:
+    if jwk.get("kty") != "EC" or jwk.get("crv") != "P-256":
+        raise KeyConfigurationError("Only EC P-256 keys are accepted")
+
+    def _int(value: str) -> int:
+        return int.from_bytes(base64.urlsafe_b64decode(value + "=" * (-len(value) % 4)), "big")
+
+    return ec.EllipticCurvePublicNumbers(_int(jwk["x"]), _int(jwk["y"]), ec.SECP256R1()).public_key()

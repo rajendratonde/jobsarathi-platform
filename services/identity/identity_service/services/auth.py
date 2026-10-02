@@ -6,8 +6,6 @@ import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
-from js_auth.context import AuthContext, EffectivePermissions, Scope
-from js_auth.tokens import issue_access_token
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -36,6 +34,8 @@ from identity_service.security import (
     verify_password,
 )
 from js_audit import AuditResult
+from js_auth.context import AuthContext, EffectivePermissions, Scope
+from js_auth.tokens import issue_access_token
 from js_core import context
 from js_core.errors import (
     DependencyUnavailable,

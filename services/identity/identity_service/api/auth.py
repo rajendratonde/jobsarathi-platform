@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response, status
-from js_auth.context import AuthContext, EffectivePermissions
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -28,6 +27,7 @@ from identity_service.api.schemas import (
 from identity_service.models import AuthIdentity, Organization, Role, User, UserRoleAssignment
 from identity_service.runtime import Runtime, authenticated, db_session, runtime
 from identity_service.services import auth as svc
+from js_auth.context import AuthContext, EffectivePermissions
 from js_core.errors import Unauthenticated
 
 router = APIRouter(tags=["auth"])

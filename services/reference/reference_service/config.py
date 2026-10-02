@@ -4,13 +4,23 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 
 from js_core.config import DatabaseSettings, ServiceSettings
 
 
 class Settings(ServiceSettings):
     service_name: str = "reference"
+
+    # Identity: verifies access tokens (JWKS) and resolves permissions (internal authz API).
+    identity_url: str = "http://127.0.0.1:8001"
+    # This service's own EC P-256 private key for service tokens (env:NAME / file:/path).
+    # Identity must hold the matching public key under SERVICE_PUBLIC_KEYS["reference"].
+    service_private_key_ref: SecretStr | None = None
+    authz_cache_seconds: int = 60  # Blueprint: callers cache permissions for at most 60 s
+
+    # Public read API: browsers and services may cache lists this long (ETag revalidation after).
+    read_max_age_seconds: int = 300
 
 
 class ServiceDatabaseSettings(DatabaseSettings):

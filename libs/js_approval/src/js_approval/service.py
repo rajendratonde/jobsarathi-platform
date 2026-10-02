@@ -8,10 +8,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Protocol
 
-from js_auth.context import Authorized, EffectivePermissions, Scope
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
+from js_auth.context import Authorized, EffectivePermissions, Scope
 from js_core.errors import Conflict, FieldError, NotFound, PermissionDenied, ValidationFailed
 
 
@@ -34,6 +34,11 @@ class ApprovalHandler(Protocol):
     def apply_approval(self, session: Session, entity: Any, request: Any, checker: uuid.UUID) -> None: ...
     def apply_rejection(self, session: Session, entity: Any, request: Any, checker: uuid.UUID) -> None: ...
     def apply_withdrawal(self, session: Session, entity: Any, request: Any, actor: uuid.UUID) -> None: ...
+
+
+# A proposal to create a record that does not exist yet is submitted with version 0; it
+# stays valid only while the record still does not exist.
+NEW_RECORD_VERSION = 0
 
 
 def version_of(handler: Any, entity: Any) -> int:
@@ -132,8 +137,13 @@ class ApprovalEngine:
     def _check_version(self, session: Session, request: Any, entity: Any, reviewed_version: int,
                        checker: Authorized) -> None:
         handler = self.handlers[request.entity_type]
-        if (entity is None or version_of(handler, entity) != request.entity_version
-                or reviewed_version != request.entity_version):
+        if entity is None and request.action_type == "CREATE" and request.entity_version == NEW_RECORD_VERSION:
+            current = NEW_RECORD_VERSION  # creation proposal: the record is made on approval
+        elif entity is None:
+            current = None
+        else:
+            current = version_of(handler, entity)
+        if current != request.entity_version or reviewed_version != request.entity_version:
             request.status = "SUPERSEDED"
             self._action(session, request, "SUPERSEDED", checker.auth.user_id, checker.auth.organization_id,
                          reviewed_version, "Record version changed after submission")

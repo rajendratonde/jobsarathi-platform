@@ -6,7 +6,6 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response, status
-from js_auth.context import Authorized
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -45,6 +44,7 @@ from identity_service.models import (
 )
 from identity_service.runtime import Runtime, db_session, require, runtime
 from identity_service.services import rbac as svc
+from js_auth.context import Authorized
 from js_core.errors import NotFound
 from js_core.responses import Page
 

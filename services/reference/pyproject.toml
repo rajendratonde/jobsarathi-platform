@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "JobSarathi Reference Data service"
 requires-python = ">=3.12"
 # Installed with --no-deps after the shared libs (see Dockerfile / docs/local-development.md).
-dependencies = ["js-core", "js-audit", "js-outbox", "js-integration"]
+dependencies = ["js-core", "js-audit", "js-outbox", "js-integration", "js-auth", "js-approval"]
 
 [tool.setuptools.packages.find]
 include = ["reference_service*"]

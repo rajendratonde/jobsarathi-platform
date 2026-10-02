@@ -7,9 +7,10 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from fastapi.testclient import TestClient
-from js_auth.service_tokens import sign_service_token
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
+
+from js_auth.service_tokens import sign_service_token
 
 PASSWORD = "Changed-2026-pw"
 

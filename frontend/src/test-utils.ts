@@ -15,13 +15,14 @@ export function apiError(status: number, code: string, message = code) {
 }
 
 export function mockApi(routes: Record<string, Handler>) {
-  const calls: { key: string; body: unknown; headers: Record<string, string> }[] = [];
+  const calls: { key: string; service: string; body: unknown; headers: Record<string, string> }[] = [];
   const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init = {}) => {
     const url = new URL(String(input), 'http://localhost');
     const path = url.pathname.replace(/^\/svc\/[a-z]+/, '');
     const key = `${init.method ?? 'GET'} ${path}`;
+    const service = url.pathname.match(/^\/svc\/([a-z]+)/)?.[1] ?? '';
     const body = init.body ? JSON.parse(String(init.body)) : undefined;
-    calls.push({ key, body, headers: (init.headers ?? {}) as Record<string, string> });
+    calls.push({ key, service, body, headers: (init.headers ?? {}) as Record<string, string> });
     const handler = routes[key];
     if (!handler) return json(404, apiError(404, 'NOT_FOUND').body);
     const result = handler(body, init);

@@ -7,8 +7,6 @@ from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
-from js_approval.service import SelfApproval, StaleVersion
-from js_auth.context import Authorized, Scope
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,7 +15,9 @@ from identity_service.api.schemas import ApprovalActionOut, ApprovalDetailOut, A
 from identity_service.common import audit
 from identity_service.models import ApprovalAction, ApprovalPolicy, ApprovalRequest, AuditLog
 from identity_service.runtime import Runtime, caller, db_session, require, runtime
+from js_approval.service import SelfApproval, StaleVersion
 from js_audit import AuditResult
+from js_auth.context import Authorized, Scope
 from js_core.errors import NotFound
 from js_core.responses import Page
 

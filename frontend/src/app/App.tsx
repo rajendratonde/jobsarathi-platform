@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from '../features/auth/AuthContext';
 import { ChangePasswordPage } from '../features/auth/ChangePasswordPage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { OrganizationSelectPage, OrganizationSwitcher } from '../features/auth/OrganizationPicker';
+import { ReferenceDataPage } from '../features/reference/ReferenceDataPage';
 import { SystemStatusPage } from '../features/system-status/SystemStatusPage';
 import { NotFoundPage } from '../shared/NotFoundPage';
 
@@ -100,6 +101,7 @@ export const routes = [
       { path: 'admin/roles', element: guarded('ROLE.VIEW', <RolesPage />) },
       { path: 'admin/permissions', element: guarded('ROLE.VIEW', <PermissionsPage />) },
       { path: 'admin/matrix', element: guarded('ROLE.VIEW', <MatrixPage />) },
+      { path: 'admin/reference', element: guarded('REFERENCE.EDIT', <ReferenceDataPage />) },
       { path: 'admin/approvals', element: guarded('MAKER_CHECKER.VIEW', <ApprovalsPage />) },
       { path: 'account/password', element: <ChangePasswordPage /> },
       { path: '*', element: <NotFoundPage /> },

@@ -5,12 +5,12 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from js_auth.context import Authorized, Scope
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from identity_service.models import AuditLog, OutboxEvent
 from js_audit import ActorType, AuditResult, record_audit
+from js_auth.context import Authorized, Scope
 from js_core.errors import FieldError, NotFound, PermissionDenied, ValidationFailed, VersionConflict
 from js_outbox import add_event
 

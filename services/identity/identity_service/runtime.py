@@ -10,17 +10,17 @@ from dataclasses import dataclass, field
 
 from cryptography.hazmat.primitives import serialization
 from fastapi import Request
-from js_approval import ApprovalEngine, ApprovalModels
-from js_auth import AuthContext, Authenticator, Authorized, KeyRing, TokenSettings, load_key_ring
-from js_auth.authz import CachingAuthzProvider
-from js_auth.context import Scope
-from js_auth.service_tokens import ServiceAuthenticator
 from sqlalchemy.orm import Session
 
 from identity_service.authz import LocalAuthzProvider
 from identity_service.config import Settings
 from identity_service.models import ApprovalAction, ApprovalPolicy, ApprovalRequest
 from identity_service.security import OtpHasher
+from js_approval import ApprovalEngine, ApprovalModels
+from js_auth import AuthContext, Authenticator, Authorized, KeyRing, TokenSettings, load_key_ring
+from js_auth.authz import CachingAuthzProvider
+from js_auth.context import Scope
+from js_auth.service_tokens import ServiceAuthenticator
 from js_core import secrets
 from js_core.db import Database
 from js_integration.sms import SmsSender, SmsSettings, build_sms_sender

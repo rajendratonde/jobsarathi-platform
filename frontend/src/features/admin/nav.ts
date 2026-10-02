@@ -12,6 +12,7 @@ export const ADMIN_NAV: NavItem[] = [
   { path: '/admin/roles', label: 'Roles', permission: 'ROLE.VIEW' },
   { path: '/admin/permissions', label: 'Permissions', permission: 'ROLE.VIEW' },
   { path: '/admin/matrix', label: 'Permission matrix', permission: 'ROLE.VIEW' },
+  { path: '/admin/reference', label: 'Reference data', permission: 'REFERENCE.EDIT' },
   { path: '/admin/approvals', label: 'Approvals', permission: 'MAKER_CHECKER.VIEW' },
 ];
 

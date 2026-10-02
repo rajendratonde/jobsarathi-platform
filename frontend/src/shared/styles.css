@@ -84,3 +84,7 @@ tr.inactive { opacity: 0.5; }
   .who { display: none; }
   .narrow { margin: 16px auto; }
 }
+.field-error { color: var(--warn); font-size: 0.8rem; font-weight: 400; }
+input[aria-invalid='true'] { border-color: var(--warn); }
+.nowrap { white-space: nowrap; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; font-weight: 500; }

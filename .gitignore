@@ -27,3 +27,6 @@ frontend/coverage/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# local service keys (tools/local_keys.py)
+infrastructure/local/secrets/

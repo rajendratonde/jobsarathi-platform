@@ -18,9 +18,10 @@ from pathlib import Path
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from js_auth.keys import generate_private_key_pem
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine, make_url
+
+from js_auth.keys import generate_private_key_pem
 
 SERVICE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # identity_test_helpers (pytest importlib mode)

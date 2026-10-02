@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 from identity_test_helpers import uniq
+
 from js_auth.keys import generate_private_key_pem
 
 

@@ -16,7 +16,6 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from js_approval import ApprovalActionMixin, ApprovalPolicyMixin, ApprovalRequestMixin
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -35,6 +34,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import CHAR, INET, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
+from js_approval import ApprovalActionMixin, ApprovalPolicyMixin, ApprovalRequestMixin
 from js_audit import AuditLogMixin
 from js_core.db import (
     CreatedMixin,

@@ -24,7 +24,6 @@ import uuid
 from collections.abc import Callable, Iterable
 from datetime import UTC, datetime
 
-from js_auth.context import EffectivePermissions, Scope, widest
 from sqlalchemy import and_, false, or_, select, update
 from sqlalchemy.orm import Session
 
@@ -40,6 +39,7 @@ from identity_service.models import (
     User,
     UserRoleAssignment,
 )
+from js_auth.context import EffectivePermissions, Scope, widest
 
 
 def resolve(session: Session, user_id: uuid.UUID, organization_id: uuid.UUID | None) -> EffectivePermissions:
